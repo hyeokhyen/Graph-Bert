@@ -92,21 +92,64 @@ class DatasetLoader(dataset):
         print('Loading {} dataset...'.format(self.dataset_name))
 
         idx_features_labels = np.genfromtxt("{}/node".format(self.dataset_source_folder_path), dtype=np.dtype(str))
+        if 0:
+            print('idx_features_labels:')
+            print (idx_features_labels)
+            print ('-------------')
+        
         features = sp.csr_matrix(idx_features_labels[:, 1:-1], dtype=np.float32)
+        if 0:
+            print ('features:')
+            print (features)
+            print('-------------')
 
         one_hot_labels = self.encode_onehot(idx_features_labels[:, -1])
+        if 0:
+            print('one_hot_labels:')
+            print(one_hot_labels)
+            print('-------------')
 
         # build graph
         idx = np.array(idx_features_labels[:, 0], dtype=np.int32)
+        if 1:
+            print('idx:')
+            print(idx)
+            print('-------------')
+
         idx_map = {j: i for i, j in enumerate(idx)}
+        if 0:
+            print('idx_map:')
+            print(idx_map)
+            print('-------------')
+
         index_id_map = {i: j for i, j in enumerate(idx)}
+        if 0:
+            print('index_id_map:')
+            print(index_id_map)
+            print('-------------')
+
         edges_unordered = np.genfromtxt("{}/link".format(self.dataset_source_folder_path),
                                         dtype=np.int32)
+        if 1:
+            print('edges_unordered:')
+            print(edges_unordered)
+            print('-------------')
+
         edges = np.array(list(map(idx_map.get, edges_unordered.flatten())),
                          dtype=np.int32).reshape(edges_unordered.shape)
+        if 0:
+            print('edges:')
+            print(edges)
+            print('-------------')
+
         adj = sp.coo_matrix((np.ones(edges.shape[0]), (edges[:, 0], edges[:, 1])),
                             shape=(one_hot_labels.shape[0], one_hot_labels.shape[0]),
                             dtype=np.float32)
+        if 0:
+            print('adj:')
+            print(adj)
+            print('-------------')
+        assert False
 
         adj = adj + adj.T.multiply(adj.T > adj) - adj.multiply(adj.T > adj)
         eigen_adj = None
@@ -174,4 +217,18 @@ class DatasetLoader(dataset):
         else:
             raw_embeddings, wl_embedding, hop_embeddings, int_embeddings = None, None, None, None
 
-        return {'X': features, 'A': adj, 'S': eigen_adj, 'index_id_map': index_id_map, 'edges': edges_unordered, 'raw_embeddings': raw_embeddings, 'wl_embedding': wl_embedding, 'hop_embeddings': hop_embeddings, 'int_embeddings': int_embeddings, 'y': labels, 'idx': idx, 'idx_train': idx_train, 'idx_test': idx_test, 'idx_val': idx_val}
+        return {
+            'X': features, 
+            'A': adj, 
+            'S': eigen_adj, 
+            'index_id_map': index_id_map, 
+            'edges': edges_unordered, # WL: link_list
+            'raw_embeddings': raw_embeddings, 
+            'wl_embedding': wl_embedding, 
+            'hop_embeddings': hop_embeddings, 
+            'int_embeddings': int_embeddings, 
+            'y': labels, 
+            'idx': idx, # WL: node_list
+            'idx_train': idx_train, 
+            'idx_test': idx_test, 
+            'idx_val': idx_val}
